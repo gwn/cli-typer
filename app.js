@@ -12,6 +12,7 @@ if (flagExists('h', 'help')) {
     console.log('  -t, --time\t\tGiven time in seconds to complete the test');
     console.log('  -w, --words\t\tNumber of words to display per line');
     console.log('  -i, --input\t\tPath to a wordlist file with new line separated words');
+    console.log('  -c, --cols\t\tWidth of the typing stage in columns (default 80)');
     console.log('  -V, --verbose\t\tShow settings on start');
     console.log('  -s, --save\t\tPath to file for saving results');
     console.log('  -h, --help\t\tShow help');
@@ -73,11 +74,11 @@ function calcRemainingTime(){
 }
 
 // TODO maybe merge box functions to one
-function boxTop(width=79) {
+function boxTop(width=CONFIG.cols) {
     return '╭' + '─'.repeat(width-14) + '┨ ' + calcRemainingTime() + ' ┠───╮';
 }
 
-function boxText(text, width=79) {
+function boxText(text, width=CONFIG.cols) {
     const spaceAvailable = width-4-removeAnsiEscape(text).length;
     if (spaceAvailable < 0) {
         return '│ ' + text;
@@ -85,11 +86,11 @@ function boxText(text, width=79) {
     return '│ ' + text + ' '.repeat(spaceAvailable) + ' │';
 }
 
-function boxSeparator(width=79) {
+function boxSeparator(width=CONFIG.cols) {
     return '├' + '─'.repeat(width-2) + '┤';
 }
 
-function boxBottom(width=79) {
+function boxBottom(width=CONFIG.cols) {
     return '╰' + '─'.repeat(width-2) + '╯';
 }
 
@@ -120,7 +121,7 @@ function printStats() {
         saveStats(STATS, CONFIG);
     }
 
-    console.log(' '.repeat(79 - 3 - wrote.length) + '│\n' + boxSeparator());
+    console.log(' '.repeat(CONFIG.cols - 3 - wrote.length) + '│\n' + boxSeparator());
     console.log(boxText('Time\'s up!'));
     console.log(boxText(`WPM: ${STATS.wpm}`));
     console.log(boxText(`All keystrokes: ${STATS.keypresses}`));
@@ -136,6 +137,7 @@ function initConfig() {
         wordsPerLine: argvParser(['-w', '--words'], 9, validateIntArg),
         givenSeconds: argvParser(['-t', '--time'], 60, validateIntArg),
         inputFile: argvParser(['-i', '--input'], __dirname + '/data/mostCommon1000.txt'),
+        cols: argvParser(['-c', '--cols'], 79),
         verbose: flagExists('V', 'verbose'),
         debug: flagExists('d', 'debug'),
         savePath: argvParser(['-s', '--save'], false)
