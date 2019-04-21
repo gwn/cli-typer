@@ -13,6 +13,7 @@ if (flagExists('h', 'help')) {
     console.log('  -w, --words\t\tNumber of words to display per line');
     console.log('  -i, --input\t\tPath to a wordlist file with new line separated words');
     console.log('  -c, --cols\t\tWidth of the typing stage in columns (default 80)');
+    console.log('  -r, --rows\t\tHeight of the typing stage in rows (default 2)');
     console.log('  -V, --verbose\t\tShow settings on start');
     console.log('  -s, --save\t\tPath to file for saving results');
     console.log('  -h, --help\t\tShow help');
@@ -39,7 +40,7 @@ const ANSI_ESCAPE = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A
 
 const lineGen = lineGenerator(CONFIG.inputFile, CONFIG.wordsPerLine);
 
-let text, nextText, cursor;
+let texts, nextText, cursor;
 
 function init(){
     stdin.setRawMode(true);
@@ -51,10 +52,11 @@ function init(){
     }
     console.log('\n  Start typing the words below:\n');
 
-    text = lineGen.next().value;
+    texts = [...Array(CONFIG.rows - 1)].map(() => lineGen.next().value);
     nextText = lineGen.next().value;
 
-    process.stdout.write(boxTop() + '\n' + boxText(text) + '\n' + boxText(nextText) + '\n' + boxSeparator() + '\n│ ');
+    process.stdout.write(boxTop() + '\n' + texts.map(boxText).join('\n') +
+        '\n' + boxText(nextText) + '\n' + boxSeparator() + '\n│ ');
     cursor = 0;
 }
 
@@ -109,7 +111,9 @@ function drawBox() {
     stdout.moveCursor(0, -1);
     stdout.clearLine();
     stdout.cursorTo(0);
-    stdout.write(boxTop() + '\n' + boxText(results + text.substring(cursor)) + '\n' + boxText(nextText) + '\n\n│ ' + wrote);
+    stdout.write(boxTop() + '\n'
+        + [boxText(results + texts[0].substring(cursor)), ...texts.slice(1).map(boxText)].join('\n')
+        + '\n\n│ ' + wrote);
 
     boxDrawIsLocked = false;
 }
@@ -138,6 +142,7 @@ function initConfig() {
         givenSeconds: argvParser(['-t', '--time'], 60, validateIntArg),
         inputFile: argvParser(['-i', '--input'], __dirname + '/data/mostCommon1000.txt'),
         cols: argvParser(['-c', '--cols'], 79),
+        rows: argvParser(['-r', '--rows'], 2),
         verbose: flagExists('V', 'verbose'),
         debug: flagExists('d', 'debug'),
         savePath: argvParser(['-s', '--save'], false)
